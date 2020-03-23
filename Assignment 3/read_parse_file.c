@@ -13,8 +13,7 @@ int main(void)
     char newString[20][20];
     int i,j,ctr;
 
-
-    fp = fopen("commands.txt", "r");
+    fp = fopen("cmdfile.txt", "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 

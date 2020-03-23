@@ -4,23 +4,18 @@
  *The function bodies for a linked list of commands
  *CS149 assignment 3 usage only
 **/
-/**
-   Example of linked list initialization in code:
-   //First command node (head of list)
-   headCommand = (CommandNode*)malloc(sizeof(CommandNode));
-   CreateCommandNode(headCommand, command, index, NULL);
-    .....
-   //Later command nodes
-   nextCommand1 = (CommandNode*)malloc(sizeof(CommandNode));
-   CreateCommandNode(nextCommand1, command, index, NULL);
-   InsertCommandAfter(headCommand, nextCommand1);
-**/
+
 #include <string.h>
+#include <stdio.h>
 #include "CommandNode.h"
 
 //create a new command node. usually nextCmd can be NULL and function InsertCommandAfter can be called to insert after head node.
-void CreateCommandNode(CommandNode* thisNode, char cmd[20][20], int ind, CommandNode* nextCmd) {
-    strcpy(thisNode->command, cmd);
+void CreateCommandNode(CommandNode* thisNode, char cmd[20][20], int ind, CommandNode* nextCmd, int commandLen) {
+    // Copy cmd into thisNodes's command
+    for(int i = 0; i < commandLen; i++) {
+        strcpy(thisNode->command[i], cmd[i]);
+    }
+
     thisNode->index = ind;
     thisNode->nextCommandPtr = nextCmd;
     return;

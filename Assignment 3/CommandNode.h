@@ -18,7 +18,7 @@ typedef struct command_struct {
 } CommandNode;
 
 
-void CreateCommandNode(CommandNode* thisNode, char cmd[20][20], int ind, CommandNode* nextCmd);
+void CreateCommandNode(CommandNode* thisNode, char cmd[20][20], int ind, CommandNode* nextCmd, int commandLen);
 void InsertCommandAfter(CommandNode* thisNode, CommandNode* newNode);
 CommandNode* GetNextCommand(CommandNode* thisNode);
 CommandNode* FindCommand(CommandNode* cmd, int pid);
