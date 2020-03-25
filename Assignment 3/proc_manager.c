@@ -39,12 +39,17 @@ int main(int argc, char *argv[]) {
     // Read each line of the file
     while ((read = getline(&line, &len, fp)) != -1) {
 
+        // Replace \n to NULL
+        if (line[strlen(line) - 1] == '\n') {
+            line[strlen(line) - 1] = 0;
+        }
+
         // Insert the command line into a 2D array
         j=0; rowNum=0;
         for(i = 0; i <= (strlen(line)); i++)
         {
             // if space or NULL found, assign NULL into newString[ctr]
-            if(line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
+            if(line[i] == ' ' || line[i] == '\0')
             {
                 newString[rowNum][j] = '\0';
                 rowNum++;       //for next word
@@ -113,7 +118,7 @@ int main(int argc, char *argv[]) {
             char *commands[20];
             int index = 0;
 
-            // Add only the strings from a command into a 1D temporary array
+            // Add only the strings from command into a 1D commands array
             while (rowNum < 20 && *(currNode -> command[index]) != '\0') {
                 commands[index] = currNode -> command[index];
                 index += 1;
@@ -132,7 +137,7 @@ int main(int argc, char *argv[]) {
             exit(2);
         }
 
-            // Parent process saves pid of child to proper node
+        // Parent process saves pid of child to proper node
         else {
             currNode -> PID = pid;
         }
@@ -181,7 +186,7 @@ int main(int argc, char *argv[]) {
                 char *commands[20];
                 int index = 0;
 
-                // Add only the strings from a command into a 1D temporary array
+                // Add only the strings from command into a 1D commands array
                 while (rowNum < 20 && *(finishedNode -> command[index]) != '\0') {
                     commands[index] = finishedNode -> command[index];
                     index += 1;
@@ -200,13 +205,13 @@ int main(int argc, char *argv[]) {
                 exit(2);
             }
 
-                // Parent process saves pid of child to proper node
+            // Parent process saves pid of child to proper node
             else {
                 finishedNode -> PID = pid;
             }
         }
 
-            // If process executes less than 2 seconds
+        // If process executes less than 2 seconds
         else {
             if(pid > 0) {
                 fprintf(stderr, "Spawning too fast\n");
