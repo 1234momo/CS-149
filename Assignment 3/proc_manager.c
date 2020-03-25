@@ -7,10 +7,6 @@
 #include <wait.h>
 #include "CommandNode.h"
 
-static void signalHandler(int iSig) {
-    fprintf(stderr,"Exited with signal %d", iSig);
-}
-
 int main(int argc, char *argv[])
 {
     // Checks if more than 1 or no file name was entered
@@ -79,10 +75,15 @@ int main(int argc, char *argv[])
     // Close file handler
     fclose(fp);
 
+    // Initialize variables for timer
+    struct timespec start, finish;
+    double elapsed;
+
     // Begin creating processes for each node in the linked list
     currNode = head;
+    pid_t pid;
     while (currNode != NULL) {
-        pid_t pid = fork();
+        pid = fork();
 
         // Print message if fork fails
         if (pid < 0) {
@@ -90,25 +91,17 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-//        char outFileName[10];
-//        char errFileName[10];
-//
-//        sprintf(outFileName, "%d.out", (currNode->index) + 1);
-//        sprintf(errFileName, "%d.err", (currNode->index) + 1);
-//
-//        int outFile = open(outFileName, O_WRONLY | O_CREAT | O_APPEND );
-//        int errFile = open(errFileName, O_WRONLY | O_CREAT | O_APPEND );
-//
-//        dup2(outFile, STDOUT_FILENO);
-//        dup2(errFile, STDERR_FILENO);
+        char outFileName[10];
+        char errFileName[10];
 
-        // Create signal handlers
-        signal(SIGKILL,  signalHandler);
-        signal(SIGTERM,  signalHandler);
+        sprintf(outFileName, "%d.out", (currNode->index) + 1);
+        sprintf(errFileName, "%d.err", (currNode->index) + 1);
 
-        // Initialize variables for timer
-        struct timespec start, finish;
-        double elapsed;
+        int outFile = open(outFileName, O_RDWR | O_CREAT | O_APPEND);
+        int errFile = open(errFileName, O_RDWR | O_CREAT | O_APPEND);
+
+        dup2(outFile, STDOUT_FILENO);
+        dup2(errFile, STDERR_FILENO);
 
         // Begin timer and store start time into the current node
         clock_gettime(CLOCK_MONOTONIC, &start);
@@ -116,37 +109,31 @@ int main(int argc, char *argv[])
 
         // Child process
         if (pid == 0) {
-            currNode -> PID = getpid();
             currNode -> active = true;
 
             char *temp[20];
-            int rowNum = 0;
-            i = 0;
+            int index = 0;
 
             // Add only the strings from a command into a 1D temporary array
-            while (rowNum < 20) {
-                if (*(currNode -> command[rowNum]) != '\0') {
-                    temp[i] = currNode -> command[rowNum];
-                    i += 1;
-                }
-
-                rowNum += 1;
+            while (rowNum < 20 && *(currNode -> command[index]) != '\0') {
+                temp[index] = currNode -> command[index];
+                index += 1;
             }
 
-            i -= 1;
+            index -= 1;
 
             // If the last character of the command is a newline, replace it with a \0
-            char lastString[sizeof(temp[i])];
-            strcpy(lastString, temp[i]);
+            char lastString[sizeof(temp[index])];
+            strcpy(lastString, temp[index]);
             if (lastString[strlen(lastString) - 1] == '\n') {
                 lastString[strlen(lastString) - 1] = '\0';
             }
 
             // Copy the commands into a new array, but insert the last part of the command with the string that
             // contains \0 as the last character
-            char *commands[i+1];
-            for (j = 0; j <= i; j++) {
-                if (j == i) {
+            char *commands[index + 1];
+            for (j = 0; j <= index; j++) {
+                if (j == index) {
                     commands[j] = (char *) malloc(sizeof(lastString));
                     strcpy(commands[j], lastString);
                 }
@@ -156,48 +143,130 @@ int main(int argc, char *argv[])
             }
 
             // End the command array with NULL at the end
-            commands[i+1] = NULL;
+            commands[index + 1] = NULL;
 
-            printf("Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
-
-//            for (j = 0; j <= i; j++) {
-//                printf("***%s***", commands[j]);
-//            }
-//            printf("\n");
-//            printf("***%s***\n", commands[0]);
+            fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
 
             // Execute the command
             execvp(commands[0], commands);
 
             // If anything went wrong, print
-            fprintf(stderr, "Couldn't execute command\n");
-            return 2;
+            perror(commands[0]);
+            exit(2);
         }
 
-        // Parent process
+        // Parent process saves pid of child to proper node
         else {
-            int status;
-
-            if ((pid = waitpid(pid, &status, 0)) < 0) {
-                fprintf(stderr, "Waitpid error\n");
-                return 3;
-            }
-
-            clock_gettime(CLOCK_MONOTONIC, &finish);
-            elapsed = (finish.tv_sec - (currNode -> starttime));
-
-            if (elapsed < 2) {
-                currNode -> active = false;
-                fprintf(stderr, "Exit with exitcode = %d\n", WIFEXITED(status));
-                fprintf(stderr, "Spawning too fast\n\n");
-            }
-            else {
-                currNode = FindCommand(head, pid);
-            }
+            currNode -> PID = pid;
         }
 
         currNode = GetNextCommand(currNode);
     }
+
+    int status;
+    while ((pid = wait(&status)) >= 0) {
+
+        CommandNode *finishedNode = FindCommand(head, pid);
+
+        finishedNode -> active = false;
+
+        // Calculate time taken for command to run
+        clock_gettime(CLOCK_MONOTONIC, &finish);
+        elapsed = (finish.tv_sec - (finishedNode -> starttime));
+
+        char outFileName[10];
+        char errFileName[10];
+
+        sprintf(outFileName, "%d.out", (finishedNode->index) + 1);
+        sprintf(errFileName, "%d.err", (finishedNode->index) + 1);
+
+        int outFile = open(outFileName, O_RDWR | O_CREAT | O_APPEND);
+        int errFile = open(errFileName, O_RDWR | O_CREAT | O_APPEND);
+
+        dup2(outFile, STDOUT_FILENO);
+        dup2(errFile, STDERR_FILENO);
+
+        if (elapsed > 2) {
+            pid = fork();
+
+            // Begin timer and store start time into the current node
+            clock_gettime(CLOCK_MONOTONIC, &start);
+            finishedNode -> starttime = start.tv_sec;
+
+            if (pid < 0) {
+                fprintf (stderr, "fork failed\n");
+                return 3;
+            }
+
+            if (pid == 0) {
+                finishedNode -> active = true;
+
+                char *temp[20];
+                int index = 0;
+
+                // Add only the strings from a command into a 1D temporary array
+                while (rowNum < 20 && *(finishedNode -> command[index]) != '\0') {
+                    temp[index] = finishedNode -> command[index];
+                    index += 1;
+                }
+
+                index -= 1;
+
+                // If the last character of the command is a newline, replace it with a \0
+                char lastString[sizeof(temp[index])];
+                strcpy(lastString, temp[index]);
+                if (lastString[strlen(lastString) - 1] == '\n') {
+                    lastString[strlen(lastString) - 1] = '\0';
+                }
+
+                // Copy the commands into a new array, but insert the last part of the command with the string that
+                // contains \0 as the last character
+                char *commands[index+1];
+                for (j = 0; j <= index; j++) {
+                    if (j == index) {
+                        commands[j] = (char *) malloc(sizeof(lastString));
+                        strcpy(commands[j], lastString);
+                    }
+                    else {
+                        commands[j] = temp[j];
+                    }
+                }
+
+                // End the command array with NULL at the end
+                commands[index+1] = NULL;
+
+                fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
+
+                // Execute the command
+                execvp(commands[0], commands);
+
+                // If anything went wrong, print
+                perror(commands[0]);
+                exit(2);
+            }
+
+            // Parent process saves pid of child to proper node
+            else {
+                finishedNode -> PID = pid;
+            }
+        }
+
+        // If process executes less than 2 seconds
+        else {
+            if(pid > 0) {
+                fprintf(stderr, "Spawning too fast\n");
+
+                if (WIFEXITED(status)) {
+                    fprintf(stderr, "Exit with exitcode = %d\n", WEXITSTATUS(status));
+                }
+                else if (WIFSIGNALED(status)) {
+                    fprintf(stderr, "Killed with signal %d\n", WTERMSIG(status));
+                }
+            }
+        }
+    }
+
+
 
     return 0;
 }
