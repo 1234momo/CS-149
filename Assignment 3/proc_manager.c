@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <wait.h>
+#include <sys/stat.h>
 #include "CommandNode.h"
 
 int main(int argc, char *argv[]) {
@@ -104,6 +105,9 @@ int main(int argc, char *argv[]) {
         int outFile = open(outFileName, O_RDWR | O_CREAT | O_APPEND);
         int errFile = open(errFileName, O_RDWR | O_CREAT | O_APPEND);
 
+        chmod(outFileName, S_IRWXU);
+        chmod(errFileName, S_IRWXU);
+
         dup2(outFile, STDOUT_FILENO);
         dup2(errFile, STDERR_FILENO);
 
@@ -128,6 +132,7 @@ int main(int argc, char *argv[]) {
             commands[index] = NULL;
 
             fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
+            fflush(stdout);
 
             // Execute the command
             execvp(commands[0], commands);
@@ -137,7 +142,7 @@ int main(int argc, char *argv[]) {
             exit(2);
         }
 
-        // Parent process saves pid of child to proper node
+            // Parent process saves pid of child to proper node
         else {
             currNode -> PID = pid;
         }
@@ -196,6 +201,7 @@ int main(int argc, char *argv[]) {
                 commands[index] = NULL;
 
                 fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
+                fflush(stdout);
 
                 // Execute the command
                 execvp(commands[0], commands);
@@ -205,13 +211,13 @@ int main(int argc, char *argv[]) {
                 exit(2);
             }
 
-            // Parent process saves pid of child to proper node
+                // Parent process saves pid of child to proper node
             else {
                 finishedNode -> PID = pid;
             }
         }
 
-        // If process executes less than 2 seconds
+            // If process executes less than 2 seconds
         else {
             if(pid > 0) {
                 fprintf(stderr, "Spawning too fast\n");
