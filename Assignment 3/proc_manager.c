@@ -7,8 +7,7 @@
 #include <wait.h>
 #include "CommandNode.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // Checks if more than 1 or no file name was entered
     if (argc <= 1 || argc > 2) {
         printf("Invalid command input. Argument should only have 1 file\n");
@@ -265,8 +264,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-
-
 
     return 0;
 }
