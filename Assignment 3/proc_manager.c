@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
         for(i = 0; i <= (strlen(line)); i++)
         {
             // if space or NULL found, assign NULL into newString[ctr]
-            if(line[i] == ' ' || line[i] == '\0')
+            if(line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
             {
                 newString[rowNum][j] = '\0';
                 rowNum++;       //for next word
@@ -110,39 +110,17 @@ int main(int argc, char *argv[]) {
         if (pid == 0) {
             currNode -> active = true;
 
-            char *temp[20];
+            char *commands[20];
             int index = 0;
 
             // Add only the strings from a command into a 1D temporary array
             while (rowNum < 20 && *(currNode -> command[index]) != '\0') {
-                temp[index] = currNode -> command[index];
+                commands[index] = currNode -> command[index];
                 index += 1;
             }
 
-            index -= 1;
-
-            // If the last character of the command is a newline, replace it with a \0
-            char lastString[sizeof(temp[index])];
-            strcpy(lastString, temp[index]);
-            if (lastString[strlen(lastString) - 1] == '\n') {
-                lastString[strlen(lastString) - 1] = '\0';
-            }
-
-            // Copy the commands into a new array, but insert the last part of the command with the string that
-            // contains \0 as the last character
-            char *commands[index + 1];
-            for (j = 0; j <= index; j++) {
-                if (j == index) {
-                    commands[j] = (char *) malloc(sizeof(lastString));
-                    strcpy(commands[j], lastString);
-                }
-                else {
-                    commands[j] = temp[j];
-                }
-            }
-
             // End the command array with NULL at the end
-            commands[index + 1] = NULL;
+            commands[index] = NULL;
 
             fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
 
@@ -154,7 +132,7 @@ int main(int argc, char *argv[]) {
             exit(2);
         }
 
-        // Parent process saves pid of child to proper node
+            // Parent process saves pid of child to proper node
         else {
             currNode -> PID = pid;
         }
@@ -200,39 +178,17 @@ int main(int argc, char *argv[]) {
             if (pid == 0) {
                 finishedNode -> active = true;
 
-                char *temp[20];
+                char *commands[20];
                 int index = 0;
 
                 // Add only the strings from a command into a 1D temporary array
                 while (rowNum < 20 && *(finishedNode -> command[index]) != '\0') {
-                    temp[index] = finishedNode -> command[index];
+                    commands[index] = finishedNode -> command[index];
                     index += 1;
                 }
 
-                index -= 1;
-
-                // If the last character of the command is a newline, replace it with a \0
-                char lastString[sizeof(temp[index])];
-                strcpy(lastString, temp[index]);
-                if (lastString[strlen(lastString) - 1] == '\n') {
-                    lastString[strlen(lastString) - 1] = '\0';
-                }
-
-                // Copy the commands into a new array, but insert the last part of the command with the string that
-                // contains \0 as the last character
-                char *commands[index+1];
-                for (j = 0; j <= index; j++) {
-                    if (j == index) {
-                        commands[j] = (char *) malloc(sizeof(lastString));
-                        strcpy(commands[j], lastString);
-                    }
-                    else {
-                        commands[j] = temp[j];
-                    }
-                }
-
                 // End the command array with NULL at the end
-                commands[index+1] = NULL;
+                commands[index] = NULL;
 
                 fprintf(stdout, "Starting command %d: child %d pid of parent %d\n", currNode->index, getpid(), getppid());
 
@@ -244,13 +200,13 @@ int main(int argc, char *argv[]) {
                 exit(2);
             }
 
-            // Parent process saves pid of child to proper node
+                // Parent process saves pid of child to proper node
             else {
                 finishedNode -> PID = pid;
             }
         }
 
-        // If process executes less than 2 seconds
+            // If process executes less than 2 seconds
         else {
             if(pid > 0) {
                 fprintf(stderr, "Spawning too fast\n");
