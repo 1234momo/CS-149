@@ -72,7 +72,6 @@ int main(int argc, char *argv[]) {
 
         // Update head if the indexNode is 0
         if ((indexNode-1) == 0) {
-            head = (CommandNode*) malloc(sizeof(CommandNode));
             head = currNode;
         }
     }
@@ -96,18 +95,15 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
+        // Repoint stdout and stderr to the appropriate files and allow permissions to open the file
         char outFileName[10];
         char errFileName[10];
-
         sprintf(outFileName, "%d.out", (currNode->index) + 1);
         sprintf(errFileName, "%d.err", (currNode->index) + 1);
-
         int outFile = open(outFileName, O_RDWR | O_CREAT | O_APPEND);
         int errFile = open(errFileName, O_RDWR | O_CREAT | O_APPEND);
-
         chmod(outFileName, S_IRWXU);
         chmod(errFileName, S_IRWXU);
-
         dup2(outFile, STDOUT_FILENO);
         dup2(errFile, STDERR_FILENO);
 
@@ -137,12 +133,12 @@ int main(int argc, char *argv[]) {
             // Execute the command
             execvp(commands[0], commands);
 
-            // If anything went wrong, print
+            // If anything went wrong, print an error message
             perror(commands[0]);
             exit(2);
         }
 
-            // Parent process saves pid of child to proper node
+        // Parent process
         else {
             currNode -> PID = pid;
         }
@@ -150,6 +146,7 @@ int main(int argc, char *argv[]) {
         currNode = GetNextCommand(currNode);
     }
 
+    // Parent waits for all children to finish execution
     int status;
     while ((pid = wait(&status)) >= 0) {
 
@@ -161,30 +158,43 @@ int main(int argc, char *argv[]) {
         clock_gettime(CLOCK_MONOTONIC, &finish);
         elapsed = (finish.tv_sec - (finishedNode -> starttime));
 
+        // Repoint stdout and stderr to the appropriate files
         char outFileName[10];
         char errFileName[10];
-
         sprintf(outFileName, "%d.out", (finishedNode->index) + 1);
         sprintf(errFileName, "%d.err", (finishedNode->index) + 1);
-
         int outFile = open(outFileName, O_RDWR | O_CREAT | O_APPEND);
         int errFile = open(errFileName, O_RDWR | O_CREAT | O_APPEND);
-
         dup2(outFile, STDOUT_FILENO);
         dup2(errFile, STDERR_FILENO);
 
+        // Output termination status
+        if (WIFEXITED(status)) {
+            fprintf(stderr, "Exit with exitcode = %d\n", WEXITSTATUS(status));
+        }
+        else if (WIFSIGNALED(status)) {
+            fprintf(stderr, "Killed with signal %d\n", WTERMSIG(status));
+        }
+
+        // Output process time
+        fprintf(stdout, "Finished at %ld, runtime duration %f\n", finish.tv_sec, elapsed);
+        fflush(stdout);
+
+        // If child took more than 2 seconds, restart the process
         if (elapsed > 2) {
             pid = fork();
 
-            // Begin timer and store start time into the current node
-            clock_gettime(CLOCK_MONOTONIC, &start);
-            finishedNode -> starttime = start.tv_sec;
-
+            // Print fork error message if fork went wrong
             if (pid < 0) {
                 fprintf (stderr, "fork failed\n");
                 return 3;
             }
 
+            // Begin timer and store start time into the current node
+            clock_gettime(CLOCK_MONOTONIC, &start);
+            finishedNode -> starttime = start.tv_sec;
+
+            // Child node
             if (pid == 0) {
                 finishedNode -> active = true;
 
@@ -206,29 +216,20 @@ int main(int argc, char *argv[]) {
                 // Execute the command
                 execvp(commands[0], commands);
 
-                // If anything went wrong, print
+                // If anything went wrong, print an error message
                 perror(commands[0]);
                 exit(2);
             }
 
-                // Parent process saves pid of child to proper node
+            // Parent process
             else {
                 finishedNode -> PID = pid;
             }
         }
 
-            // If process executes less than 2 seconds
+        // If process executes less than 2 seconds
         else {
-            if(pid > 0) {
-                fprintf(stderr, "Spawning too fast\n");
-
-                if (WIFEXITED(status)) {
-                    fprintf(stderr, "Exit with exitcode = %d\n", WEXITSTATUS(status));
-                }
-                else if (WIFSIGNALED(status)) {
-                    fprintf(stderr, "Killed with signal %d\n", WTERMSIG(status));
-                }
-            }
+            fprintf(stderr, "Spawning too fast\n");
         }
     }
 
