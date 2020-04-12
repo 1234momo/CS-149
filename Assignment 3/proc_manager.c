@@ -47,17 +47,15 @@ int main(int argc, char *argv[]) {
 
         // Insert the command line into a 2D array
         j=0; rowNum=0;
-        for(i = 0; i <= (strlen(line)); i++)
-        {
-            // if space or NULL found, assign NULL into newString[ctr]
-            if(line[i] == ' ' || line[i] == '\0')
-            {
+        for(i = 0; i <= (strlen(line)); i++) {
+
+            // If space or NULL found, assign NULL into newString[ctr]
+            if(line[i] == ' ' || line[i] == '\0') {
                 newString[rowNum][j] = '\0';
-                rowNum++;       //for next word
-                j = 0;          //for next word, init index to 0
+                rowNum++;
+                j = 0;
             }
-            else
-            {
+            else {
                 newString[rowNum][j] = line[i];
                 j++;
             }
