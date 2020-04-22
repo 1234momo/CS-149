@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "CommandNode.h"
 #include "Trace_Node.h"
 
@@ -12,7 +14,7 @@
 // Information about the function F should be printed by printing the stack (use PRINT_TRACE)
 void* REALLOC(void* p, int newSize, char* file, int line) {
     p = realloc(p, newSize);
-    printf("File %s, line %d, function %s reallocated the memory segment at address %p to a new size %d\n", file, line, PRINT_TRACE, p, newSize);
+    fprintf(stdout,"File %s, line %d, function %s reallocated the memory segment at address %p to a new size %d\n", file, line, PRINT_TRACE(), p, newSize);
     return p;
 }
 
@@ -23,7 +25,7 @@ void* REALLOC(void* p, int newSize, char* file, int line) {
 // Information about the function F should be printed by printing the stack (use PRINT_TRACE)
 void* MALLOC(int size, char* file, int line) {
     void* p = malloc(size);
-    printf("File %s, line %d, function %s allocated new memory segment at address %p to size %d\n", file, line, PRINT_TRACE, p, size);
+    fprintf(stdout,"File %s, line %d, function %s allocated new memory segment at address %p to size %d\n", file, line, PRINT_TRACE(), p, size);
     return p;
 }
 
@@ -34,7 +36,7 @@ void* MALLOC(int size, char* file, int line) {
 // Information about the function F should be printed by printing the stack (use PRINT_TRACE)
 void FREE(void* p,char* file,int line) {
     free(p);
-    printf("File %s, line %d, function %s deallocated the memory segment at address %p\n", file, line, PRINT_TRACE, p);
+    fprintf(stdout,"File %s, line %d, function %s deallocated the memory segment at address %p\n", file, line, PRINT_TRACE(), p);
 }
 
 #define realloc(a,b) REALLOC(a,b,__FILE__,__LINE__)
@@ -44,59 +46,47 @@ void FREE(void* p,char* file,int line) {
 // -----------------------------------------
 // Add an extra column to a 2d array of ints.
 // Demonstrates how memory usage tracing of realloc is done
-void add_column(int** array,int rows,int columns) {
-    PUSH_TRACE("add_column");
-    int i;
+char** add_columns(char** array, int rows, int columns) {
+    PUSH_TRACE("add_columns");
 
-    for(i = 0; i < rows; i++) {
-        array[i] = (int*) realloc(array[i],sizeof(int) * (columns + 1));
-        array[i][columns] = 10 * i + columns;
+    for(int i = 0; i < rows; i++) {
+        array[i] = (char*) realloc(array[i],sizeof(char) * (columns + 1));
     }
+
     POP_TRACE();
-    return;
+    return array;
+}
+
+// -----------------------------------------
+// Add an extra column to a 2d array of ints.
+// Demonstrates how memory usage tracing of realloc is done
+char** add_row(char** array, int rows) {
+    PUSH_TRACE("add_row");
+    array = (char**) realloc(array, sizeof(char*) * (rows + 1));
+    POP_TRACE();
+    return array;
 }
 
 // ------------------------------------------
-// Example of how the memory trace is done
-// Demonstrates how memory usage tracing of malloc and free is done
-void make_extend_array() {
-    PUSH_TRACE("make_extend_array");
-    int i, j;
-    int **array;
+// Allocates memory for the char** array
+char** allocate_array_mem(char** array, int rows, int columns) {
+    PUSH_TRACE("allocate_array_mem");
 
     // Make array
-    array = (int**) malloc(sizeof(int*) * 4);  // 4 rows
-    for(i = 0; i < 4; i++) {
-        array[i] = (int*) malloc(sizeof(int) * 3);  // 3 columns
-        for(j = 0; j < 3; j++)
-            array[i][j] = 10 * i + j;
+    array = (char**) malloc(sizeof(char*) * rows);
+
+    // Allocate array memory
+    for(int i = 0; i < rows; i++) {
+        array[i] = (char*) malloc(sizeof(char) * columns);
     }
 
-    // Display array
-    for(i = 0; i < 4; i++)
-        for(j = 0; j < 3; j++)
-            printf("array[%d][%d]=%d\n", i, j, array[i][j]);
-
-    // Add a new column
-    add_column(array,4,3);
-
-    // Display the array again
-    for(i = 0; i < 4; i++)
-        for(j = 0; j < 4; j++)
-            printf("array[%d][%d]=%d\n", i, j, array[i][j]);
-
-    // Deallocate the array
-    for(i = 0; i < 4; i++)
-        free((void*) array[i]);
-    free((void*) array);
-
     POP_TRACE();
-    return;
+    return array;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc > 2 || argc < 1) {
-        printf("Number of files inputted must be 1");
+    if (argc > 2 || argc <= 1) {
+        printf("Number of files inputted must be 1\n");
         exit(EXIT_FAILURE);
     }
 
@@ -106,8 +96,15 @@ int main(int argc, char *argv[]) {
     size_t length = 0;
     ssize_t read;
 
-    // Initialize char** array
-    char** fileCommands = (char**) malloc(sizeof(char*) * 10);
+    // Open memtrace.out file and redirect stdout to memtrace.out
+    int outFile = open("memtrace.out", O_RDWR | O_CREAT | O_APPEND);
+    chmod("memtrace.out", S_IRWXU);
+    dup2(outFile, STDOUT_FILENO);
+
+    // Initialize a char** array of 10 rows and 10 columns
+    char** fileCommands = NULL;
+    int rows = 10, columns = 10;
+    fileCommands = allocate_array_mem(fileCommands, rows, columns);
     int index = 0;
 
     // Initialize the linkedlist and necessary variables to help create the list
@@ -127,8 +124,20 @@ int main(int argc, char *argv[]) {
     // Read each line of the file
     while ((read = getline(&line, &length, fp)) != -1) {
 
+        // Check if command string is bigger than the size of the row
+        if ((strlen(line) + 1) > columns) {
+            columns = strlen(line);
+            fileCommands = add_columns(fileCommands, rows, columns);
+        }
+
+        // Check if there is more rows needed
+        if ((index + 1) == rows) {
+            rows += 1;
+            fileCommands = add_row(fileCommands, rows);
+        }
+
         // Insert command read from file into char** array
-        fileCommands[index] = line;
+        strcpy(fileCommands[index], line);
 
         // Create linkedlist
         currNode = (CommandNode*) malloc(sizeof(CommandNode));
@@ -139,13 +148,17 @@ int main(int argc, char *argv[]) {
             head = currNode;
         }
 
-        ++index;
+        index += 1;
     }
+
+    PrintNodes(head);
+
+    // Deallocate the array
+    for(int i = 0; i < rows; i++)
+        free((void*) fileCommands[i]);
+    free((void*) fileCommands);
 
     // Close file handler
     fclose(fp);
-
-
-
     return 0;
 }

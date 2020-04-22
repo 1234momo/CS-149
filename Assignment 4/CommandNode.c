@@ -5,7 +5,7 @@
 //create a new command node. usually nextCmd can be NULL and function InsertCommandAfter can be called to insert after head node.
 void CreateCommandNode(CommandNode* thisNode, char* cmd, int ind, CommandNode* nextCmd) {
     // Copy cmd into thisNodes's command
-    strcpy(thisNode->command, cmd);
+    thisNode->command = cmd;
     thisNode->index = ind;
     thisNode->nextCommandPtr = nextCmd;
     return;
@@ -27,7 +27,7 @@ void PrintNodes(CommandNode* node) {
         return;
     }
 
-    printf("Index: %d\tCommand: %s\n", node->index, node->command);
+    fprintf(stdout,"Index: %d\tCommand: %s\n", node->index, node->command);
     PrintNodes(GetNextCommand(node));
 }
 

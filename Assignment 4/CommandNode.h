@@ -1,4 +1,6 @@
 #include <stdbool.h>
+#ifndef COMMANDNODE_H
+#define COMMANDNODE_H
 
 typedef struct command_struct {
     char* command;
@@ -11,3 +13,5 @@ void CreateCommandNode(CommandNode* thisNode, char* cmd, int ind, CommandNode* n
 void InsertCommandAfter(CommandNode* thisNode, CommandNode* newNode);
 void PrintNodes(CommandNode* node);
 CommandNode* GetNextCommand(CommandNode* thisNode);
+
+#endif
