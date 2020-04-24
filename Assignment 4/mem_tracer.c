@@ -26,6 +26,7 @@ void* REALLOC(void* p, int newSize, char* file, int line) {
 void* MALLOC(int size, char* file, int line) {
     void* p = malloc(size);
     fprintf(stdout,"File %s, line %d, function %s allocated new memory segment at address %p to size %d\n", file, line, PRINT_TRACE(), p, size);
+    free(p);
     return p;
 }
 
