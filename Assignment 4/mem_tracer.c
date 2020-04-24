@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 
     // Initialize a char** array of 10 rows and 10 columns
     char** fileCommands = NULL;
-    int rows = 10, columns = 10;
+    int rows = 10, columns = 20;
     fileCommands = allocate_array_mem(fileCommands, rows, columns);
     int index = 0;
 
@@ -147,6 +147,7 @@ int main(int argc, char *argv[]) {
         if (index == 0) {
             head = currNode;
         }
+
         PrintNodes(head);
 
         index += 1;
@@ -159,9 +160,8 @@ int main(int argc, char *argv[]) {
 
     // Deallocate the linkedlist
     FreeNodes(head);
-    free(head);
-    free(currNode);
-    free(prevNode);
+
+    free(line);
 
     FreeTraceTop();
 
