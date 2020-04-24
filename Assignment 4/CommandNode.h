@@ -13,5 +13,5 @@ void CreateCommandNode(CommandNode* thisNode, char* cmd, int ind, CommandNode* n
 void InsertCommandAfter(CommandNode* thisNode, CommandNode* newNode);
 void PrintNodes(CommandNode* node);
 CommandNode* GetNextCommand(CommandNode* thisNode);
-
+void FreeNodes(CommandNode* node);
 #endif

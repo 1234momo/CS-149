@@ -17,4 +17,6 @@ void PUSH_TRACE(char* p);
 /* For example, it returns a string that looks like: funcA:funcB:funcC.  */
 char* PRINT_TRACE();
 
+void FreeTraceTop();
+
 #endif

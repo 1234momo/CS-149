@@ -141,22 +141,29 @@ int main(int argc, char *argv[]) {
 
         // Create linkedlist
         currNode = (CommandNode*) malloc(sizeof(CommandNode));
-        CreateCommandNode(currNode, line, index, NULL);
+        CreateCommandNode(currNode, fileCommands[index], index, NULL);
         InsertCommandAfter(prevNode, currNode);
         prevNode = currNode;
         if (index == 0) {
             head = currNode;
         }
+        PrintNodes(head);
 
         index += 1;
     }
 
-    PrintNodes(head);
-
     // Deallocate the array
     for(int i = 0; i < rows; i++)
-        free((void*) fileCommands[i]);
-    free((void*) fileCommands);
+        free(fileCommands[i]);
+    free(fileCommands);
+
+    // Deallocate the linkedlist
+    FreeNodes(head);
+    free(head);
+    free(currNode);
+    free(prevNode);
+
+    FreeTraceTop();
 
     // Close file handler
     fclose(fp);
