@@ -44,8 +44,7 @@ void FREE(void* p,char* file,int line) {
 #define free(a) FREE(a,__FILE__,__LINE__)
 
 // -----------------------------------------
-// Add an extra column to a 2d array of ints.
-// Demonstrates how memory usage tracing of realloc is done
+// Add an extra column to char** fileCommands.
 char** add_columns(char** array, int rows, int columns) {
     PUSH_TRACE("add_columns");
 
@@ -60,10 +59,10 @@ char** add_columns(char** array, int rows, int columns) {
 }
 
 // -----------------------------------------
-// Add an extra column to a 2d array of ints.
-// Demonstrates how memory usage tracing of realloc is done
+// Add an extra row to char** fileCommands
 char** add_row(char** array, int rows, int columns) {
     PUSH_TRACE("add_row");
+
     array = (char**) realloc(array, sizeof(char*) * rows);
 
     // Reallocate array memory
@@ -80,7 +79,7 @@ char** add_row(char** array, int rows, int columns) {
 char** allocate_array_mem(char** array, int rows, int columns) {
     PUSH_TRACE("allocate_array_mem");
 
-    // Make array
+    // Make char** array
     array = (char**) malloc(sizeof(char*) * rows);
 
     // Allocate array memory
@@ -109,7 +108,8 @@ int main(int argc, char *argv[]) {
     chmod("memtrace.out", S_IRWXU);
     dup2(outFile, STDOUT_FILENO);
 
-    // Initialize a char** array of 10 rows and 10 columns
+    // Initialize a char** array of 10 rows and 20 columns
+    // William stated to assume string commands are of length 20 max
     char** fileCommands = NULL;
     int rows = 10, columns = 20;
     fileCommands = allocate_array_mem(fileCommands, rows, columns);
@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
     CommandNode *head = NULL;
     CommandNode *currNode = NULL;
     CommandNode *prevNode = (CommandNode*) malloc(sizeof(CommandNode));
+    free(prevNode);
 
     // Open the file specified by the terminal
     fp = fopen(argv[1], "r");
@@ -156,27 +157,28 @@ int main(int argc, char *argv[]) {
             head = currNode;
         }
 
+        // Print linkedlist to determine if linkedlist contains correct elements
         PrintNodes(head);
 
         index += 1;
     }
 
     // Deallocate the array
-    for(int i = 0; i < rows; i++)
+    for(int i = 0; i < rows; ++i)
         free(fileCommands[i]);
     free(fileCommands);
 
     // Deallocate the linkedlist
     FreeNodes(head);
-    free(head);
-    free(currNode);
-    free(prevNode);
 
+    // Deallocate line
     free(line);
 
+    // Deallocate TRACE_TOP from Trace_Node.c
     FreeTraceTop();
 
     // Close file handler
     fclose(fp);
+
     return 0;
 }

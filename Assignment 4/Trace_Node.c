@@ -87,6 +87,7 @@ char* PRINT_TRACE() {
     return buf;
 }
 
+// Frees TRACE_TOP
 void FreeTraceTop() {
     free(TRACE_TOP);
 }
