@@ -41,7 +41,6 @@ void PUSH_TRACE(char* p)
     tnode->functionid = p;
     tnode->next = TRACE_TOP;    // insert tnode as the first in the list
     TRACE_TOP = tnode;          // point TRACE_TOP to the first node
-
 }
 
 /* --------------------------------*/

@@ -7,7 +7,6 @@
 void CreateCommandNode(CommandNode* thisNode, char* cmd, int ind, CommandNode* nextCmd) {
     // Copy cmd into thisNodes's command
     thisNode->command = cmd;
-    printf("%s\n", thisNode->command);
     thisNode->index = ind;
     thisNode->nextCommandPtr = nextCmd;
     return;

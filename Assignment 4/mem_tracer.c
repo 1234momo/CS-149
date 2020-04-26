@@ -26,7 +26,6 @@ void* REALLOC(void* p, int newSize, char* file, int line) {
 void* MALLOC(int size, char* file, int line) {
     void* p = malloc(size);
     fprintf(stdout,"File %s, line %d, function %s allocated new memory segment at address %p to size %d\n", file, line, PRINT_TRACE(), p, size);
-    free(p);
     return p;
 }
 
@@ -50,6 +49,8 @@ void FREE(void* p,char* file,int line) {
 char** add_columns(char** array, int rows, int columns) {
     PUSH_TRACE("add_columns");
 
+    array = (char**) realloc(array, sizeof(char*) * rows);
+
     for(int i = 0; i < rows; i++) {
         array[i] = (char*) realloc(array[i],sizeof(char) * (columns + 1));
     }
@@ -61,9 +62,15 @@ char** add_columns(char** array, int rows, int columns) {
 // -----------------------------------------
 // Add an extra column to a 2d array of ints.
 // Demonstrates how memory usage tracing of realloc is done
-char** add_row(char** array, int rows) {
+char** add_row(char** array, int rows, int columns) {
     PUSH_TRACE("add_row");
-    array = (char**) realloc(array, sizeof(char*) * (rows + 1));
+    array = (char**) realloc(array, sizeof(char*) * rows);
+
+    // Reallocate array memory
+    for(int i = 0; i < rows; i++) {
+        array[i] = (char*) realloc(array[i], sizeof(char) * columns);
+    }
+
     POP_TRACE();
     return array;
 }
@@ -126,15 +133,15 @@ int main(int argc, char *argv[]) {
     while ((read = getline(&line, &length, fp)) != -1) {
 
         // Check if command string is bigger than the size of the row
-        if ((strlen(line) + 1) > columns) {
+        if (strlen(line) > columns) {
             columns = strlen(line);
             fileCommands = add_columns(fileCommands, rows, columns);
         }
 
         // Check if there is more rows needed
-        if ((index + 1) == rows) {
+        if (index == rows) {
             rows += 1;
-            fileCommands = add_row(fileCommands, rows);
+            fileCommands = add_row(fileCommands, rows, columns);
         }
 
         // Insert command read from file into char** array
@@ -161,6 +168,9 @@ int main(int argc, char *argv[]) {
 
     // Deallocate the linkedlist
     FreeNodes(head);
+    free(head);
+    free(currNode);
+    free(prevNode);
 
     free(line);
 
