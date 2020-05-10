@@ -81,7 +81,7 @@ int main() {
 
 
 /**********************************************************************
-// function thread_runner runs inside each thread -------------------------------------------------- 
+RUNNER FUNCTION FOR EACH THREAD
 **********************************************************************/
 void* thread_runner(void* x) {
     pthread_t me = pthread_self();
