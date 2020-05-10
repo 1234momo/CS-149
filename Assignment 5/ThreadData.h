@@ -2,7 +2,7 @@
 #define THREADDATA_H
 #include <pthread.h>
 
-struct THREADDATA_STRUCT {
+typedef struct THREADDATA_STRUCT {
   pthread_t creator;
 } ThreadData;
 
