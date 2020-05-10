@@ -16,50 +16,51 @@ pthread_mutex_t tlock3 = PTHREAD_MUTEX_INITIALIZER;
 //thread mutex lock for critical section of setting is_reading_complete to true
 pthread_mutex_t tlock4 = PTHREAD_MUTEX_INITIALIZER;
 
+// Condition for waking up thread 2
+pthread_cond_t condition = PTHREAD_COND_INITIALIZER;
 
 void* thread_runner(void*);
 pthread_t thread1, thread2;
+ThreadData* p = NULL;
 
 // Variables for reading input from stdin
 char buffer[100];
 char* input;
 
+// Variables for the linked list
 InputNode* currNode = NULL;
 InputNode* head = NULL;
 bool didHeadChange = false;
-pthread_cond_t condition = PTHREAD_COND_INITIALIZER;
-
-ThreadData* p = NULL;
-
 
 // Variable for indexing of messages by the logging function
 int logindex = 0;
 
-//A flag to indicate if the reading of input is complete, 
-//so the other thread knows when to stop
+// A flag to indicate if the reading of input is complete,
+// so the other thread knows when to stop
 bool is_reading_complete = false;
 
-// variables to store date and time components
+// Variables to store date and time components
 int hours, minutes, seconds, day, month, year;
-
-// time_t is arithmetic time type
 time_t now;
-
 struct tm *local;
 
 
 /*********************************************************
-// function main  ------------------------------------------------- 
+MAIN FUNCTION
 *********************************************************/
 int main() {
     // Obtain current time
-    // time() returns the current time of the system as a time_t value
     time(&now);
 
     // localtime converts a time_t value to calendar time and
     // returns a pointer to a tm structure with its members
     // filled with the corresponding values
     local = localtime(&now);
+
+    // Initialize day, month, and year
+    day = local->tm_mday;            // get day of month (1 to 31)
+    month = local->tm_mon + 1;       // get month of year (0 to 11)
+    year = local->tm_year + 1900;    // get year since 1900
 
     printf("create first thread\n");
     pthread_create(&thread1, NULL,thread_runner, NULL);
@@ -117,15 +118,11 @@ void* thread_runner(void* x) {
             minutes = local->tm_min;        // get minutes passed after the hour (0-59)
             seconds = local->tm_sec;        // get seconds passed after minute (0-59)
 
-            day = local->tm_mday;            // get day of month (1 to 31)
-            month = local->tm_mon + 1;    // get month of year (0 to 11)
-            year = local->tm_year + 1900;    // get year since 1900
-
             // before midday
             if (hours < 12)
                 printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours, minutes, seconds, input);
 
-                // after midday
+            // after midday
             else
                 printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds, input);
 
@@ -141,7 +138,7 @@ void* thread_runner(void* x) {
         pthread_mutex_unlock(&tlock4);
     }
 
-    // THREAD 2: print head of linkedlist and frees memory
+    // THREAD 2: print head of linkedlist
     else {
         while (!is_reading_complete) {
             // CRITICAL SECTION: Wait for head to change if it hasn't
@@ -158,15 +155,11 @@ void* thread_runner(void* x) {
             // Thread 2 could be waiting for the head to change, but then the user hits enter, which causes
             // thread 2 to stop waiting and the linked list to be deallocated.
             // The if statement prevents the program from continuing into this block of code and giving a seg fault
-            // when accessing the linked list.
+            // when accessing the linked list since the linked list could be deallocated.
             if (!is_reading_complete) {
                 hours = local->tm_hour;        // get hours since midnight (0-23)
                 minutes = local->tm_min;        // get minutes passed after the hour (0-59)
                 seconds = local->tm_sec;        // get seconds passed after minute (0-59)
-
-                day = local->tm_mday;            // get day of month (1 to 31)
-                month = local->tm_mon + 1;    // get month of year (0 to 11)
-                year = local->tm_year + 1900;    // get year since 1900
 
                 // before midday
                 if (hours < 12)
