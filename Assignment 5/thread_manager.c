@@ -45,9 +45,7 @@ time_t now;
 struct tm *local;
 
 
-/*********************************************************
-MAIN FUNCTION
-*********************************************************/
+// MAIN FUNCTION
 int main() {
     printf("create first thread\n");
     pthread_create(&thread1, NULL,thread_runner, NULL);
@@ -67,9 +65,7 @@ int main() {
 }
 
 
-/**********************************************************************
-RUNNER FUNCTION FOR EACH THREAD
-**********************************************************************/
+// RUNNER FUNCTION FOR EACH THREAD
 void* thread_runner(void* x) {
     pthread_t me = pthread_self();
 
@@ -99,10 +95,8 @@ void* thread_runner(void* x) {
 
             // CRITICAL SECTION: Print that a new node is in the linkedlist
             pthread_mutex_lock(&tlock1);
-            // Obtain current time
+            // Obtain current time and convert it to calendar time
             time(&now);
-
-            // localtime converts a time_t value to calendar time
             local = localtime(&now);
 
             // Obtain the date
@@ -149,15 +143,10 @@ void* thread_runner(void* x) {
 
             // CRITICAL SECTION: Print the head content 
             pthread_mutex_lock(&tlock1);
-            // Thread 2 could be waiting for the head to change, but then the user hits enter, which causes
-            // thread 2 to stop waiting and the linked list to be deallocated.
-            // The if statement prevents the program from continuing into this block of code and giving a seg fault
-            // when accessing the linked list since the linked list could be deallocated.
+            // Ensure that the reading is complete to prevent seg fault from linked list
             if (!is_reading_complete) {
-                // Obtain current time
+                // Obtain current time and convert it to calendar time
                 time(&now);
-
-                // localtime converts a time_t value to calendar time
                 local = localtime(&now);
 
                 // Obtain the date
@@ -192,10 +181,8 @@ void* thread_runner(void* x) {
 
         // CRITICAL SECTION: Print that the linkedlist is freed
         pthread_mutex_lock(&tlock1);
-        // Obtain current time
+        // Obtain current time and convert it to calendar time
         time(&now);
-
-        // localtime converts a time_t value to calendar time
         local = localtime(&now);
 
         // Obtain the date
@@ -228,10 +215,8 @@ void* thread_runner(void* x) {
 
         // CRITICAL SECTION: Print that the ThreadData didn't get touched
         pthread_mutex_lock(&tlock1);
-        // Obtain current time
+        // Obtain current time and convert it to calendar time
         time(&now);
-
-        // localtime converts a time_t value to calendar time
         local = localtime(&now);
 
         // Obtain the date
@@ -262,10 +247,8 @@ void* thread_runner(void* x) {
 
         // CRITICAL SECTION: Print that the ThreadData is freed
         pthread_mutex_lock(&tlock1);
-        // Obtain current time
+        // Obtain current time and convert it to calendar time
         time(&now);
-
-        // localtime converts a time_t value to calendar time
         local = localtime(&now);
 
         // Obtain the date
