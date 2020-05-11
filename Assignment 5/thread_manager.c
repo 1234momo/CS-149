@@ -49,12 +49,6 @@ struct tm *local;
 MAIN FUNCTION
 *********************************************************/
 int main() {
-    // Obtain current time
-    time(&now);
-
-    // localtime converts a time_t value to calendar time
-    local = localtime(&now);
-
     printf("create first thread\n");
     pthread_create(&thread1, NULL,thread_runner, NULL);
     
@@ -105,10 +99,18 @@ void* thread_runner(void* x) {
 
             // CRITICAL SECTION: Print that a new node is in the linkedlist
             pthread_mutex_lock(&tlock1);
+            // Obtain current time
+            time(&now);
+
+            // localtime converts a time_t value to calendar time
+            local = localtime(&now);
+
+            // Obtain the date
             day = local->tm_mday;            // get day of month (1 to 31)
             month = local->tm_mon + 1;       // get month of year (0 to 11)
             year = local->tm_year + 1900;    // get year since 1900
 
+            // Obtain the time
             hours = local->tm_hour;          // get hours since midnight (0-23)
             minutes = local->tm_min;         // get minutes passed after the hour (0-59)
             seconds = local->tm_sec;         // get seconds passed after minute (0-59)
@@ -152,21 +154,29 @@ void* thread_runner(void* x) {
             // The if statement prevents the program from continuing into this block of code and giving a seg fault
             // when accessing the linked list since the linked list could be deallocated.
             if (!is_reading_complete) {
+                // Obtain current time
+                time(&now);
+
+                // localtime converts a time_t value to calendar time
+                local = localtime(&now);
+
+                // Obtain the date
                 day = local->tm_mday;            // get day of month (1 to 31)
                 month = local->tm_mon + 1;       // get month of year (0 to 11)
                 year = local->tm_year + 1900;    // get year since 1900
 
+                // Obtain the time
                 hours = local->tm_hour;          // get hours since midnight (0-23)
                 minutes = local->tm_min;         // get minutes passed after the hour (0-59)
                 seconds = local->tm_sec;         // get seconds passed after minute (0-59)
 
                 // Before midday
                 if (hours < 12)
-                    printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours, minutes, seconds, head->input);
+                    printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours, minutes, seconds, head->input);
 
                 // After midday
                 else
-                    printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds, head->input);
+                    printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds, head->input);
 
                 ++logindex;
             }
@@ -182,7 +192,31 @@ void* thread_runner(void* x) {
 
         // CRITICAL SECTION: Print that the linkedlist is freed
         pthread_mutex_lock(&tlock1);
-        printf("LogIndex %d, Thread %ld, PID %d: freed linked list.\n", logindex, me, getpid());
+        // Obtain current time
+        time(&now);
+
+        // localtime converts a time_t value to calendar time
+        local = localtime(&now);
+
+        // Obtain the date
+        day = local->tm_mday;            // get day of month (1 to 31)
+        month = local->tm_mon + 1;       // get month of year (0 to 11)
+        year = local->tm_year + 1900;    // get year since 1900
+
+        // Obtain the time
+        hours = local->tm_hour;          // get hours since midnight (0-23)
+        minutes = local->tm_min;         // get minutes passed after the hour (0-59)
+        seconds = local->tm_sec;         // get seconds passed after minute (0-59)
+
+        // Before midday
+        if (hours < 12)
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: Freed linked list\n", logindex, me, getpid(), day, month, year, hours, minutes, seconds);
+
+        // After midday
+        else {
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: Freed linked list\n", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds);
+        }
+
         ++logindex;
         pthread_mutex_unlock(&tlock1);
     }
@@ -191,8 +225,36 @@ void* thread_runner(void* x) {
     // CRITICAL SECTION: Free p
     pthread_mutex_lock(&tlock2);
     if (p != NULL && p->creator == me) {
-        printf("LogIndex %d, This is thread %ld and I didn't touch ThreadData\n", logindex, me);
+
+        // CRITICAL SECTION: Print that the ThreadData didn't get touched
+        pthread_mutex_lock(&tlock1);
+        // Obtain current time
+        time(&now);
+
+        // localtime converts a time_t value to calendar time
+        local = localtime(&now);
+
+        // Obtain the date
+        day = local->tm_mday;            // get day of month (1 to 31)
+        month = local->tm_mon + 1;       // get month of year (0 to 11)
+        year = local->tm_year + 1900;    // get year since 1900
+
+        // Obtain the time
+        hours = local->tm_hour;          // get hours since midnight (0-23)
+        minutes = local->tm_min;         // get minutes passed after the hour (0-59)
+        seconds = local->tm_sec;         // get seconds passed after minute (0-59)
+
+        // Before midday
+        if (hours < 12)
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: Didn't touch ThreadData\n", logindex, me, getpid(), day, month, year, hours, minutes, seconds);
+
+        // After midday
+        else {
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: Didn't touch ThreadData\n", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds);
+        }
+
         ++logindex;
+        pthread_mutex_unlock(&tlock1);
     }
     else {
         free(p);
@@ -200,7 +262,31 @@ void* thread_runner(void* x) {
 
         // CRITICAL SECTION: Print that the ThreadData is freed
         pthread_mutex_lock(&tlock1);
-        printf("LogIndex %d, This is thread %ld and I deleted the ThreadData object\n", logindex, me);
+        // Obtain current time
+        time(&now);
+
+        // localtime converts a time_t value to calendar time
+        local = localtime(&now);
+
+        // Obtain the date
+        day = local->tm_mday;            // get day of month (1 to 31)
+        month = local->tm_mon + 1;       // get month of year (0 to 11)
+        year = local->tm_year + 1900;    // get year since 1900
+
+        // Obtain the time
+        hours = local->tm_hour;          // get hours since midnight (0-23)
+        minutes = local->tm_min;         // get minutes passed after the hour (0-59)
+        seconds = local->tm_sec;         // get seconds passed after minute (0-59)
+
+        // Before midday
+        if (hours < 12)
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am: I deleted the ThreadData object\n", logindex, me, getpid(), day, month, year, hours, minutes, seconds);
+
+        // After midday
+        else {
+            printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm: I deleted the ThreadData object\n", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds);
+        }
+
         ++logindex;
         pthread_mutex_unlock(&tlock1);
     }
