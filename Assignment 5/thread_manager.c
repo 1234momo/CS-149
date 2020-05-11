@@ -52,9 +52,7 @@ int main() {
     // Obtain current time
     time(&now);
 
-    // localtime converts a time_t value to calendar time and
-    // returns a pointer to a tm structure with its members
-    // filled with the corresponding values
+    // localtime converts a time_t value to calendar time
     local = localtime(&now);
 
     // Initialize day, month, and year
@@ -98,10 +96,10 @@ void* thread_runner(void* x) {
 
     // THREAD 1: Read stdin and create linkedlist
     if (p != NULL && p->creator == me) {
-
         // Read each line from STDIN
         while ((input = fgets(buffer, 100, stdin)) != NULL) {
             if (*input == '\n') break;
+
 
             // CRITICAL SECTION: Creating linkedlist
             pthread_mutex_lock(&tlock3);
@@ -114,15 +112,15 @@ void* thread_runner(void* x) {
 
             // CRITICAL SECTION: Print that a new node is in the linkedlist
             pthread_mutex_lock(&tlock1);
-            hours = local->tm_hour;        // get hours since midnight (0-23)
+            hours = local->tm_hour;         // get hours since midnight (0-23)
             minutes = local->tm_min;        // get minutes passed after the hour (0-59)
             seconds = local->tm_sec;        // get seconds passed after minute (0-59)
 
-            // before midday
+            // Before midday
             if (hours < 12)
                 printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours, minutes, seconds, input);
 
-            // after midday
+            // After midday
             else
                 printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds, input);
 
@@ -131,6 +129,7 @@ void* thread_runner(void* x) {
             pthread_mutex_unlock(&tlock1);
         }
 
+        // CRITICAL SECTION: Set is_reading_compleete and didHeadChange to true
         pthread_mutex_lock(&tlock4);
         is_reading_complete = true;
         didHeadChange = true;
@@ -138,7 +137,7 @@ void* thread_runner(void* x) {
         pthread_mutex_unlock(&tlock4);
     }
 
-    // THREAD 2: print head of linkedlist
+    // THREAD 2: Print head of linkedlist
     else {
         while (!is_reading_complete) {
             // CRITICAL SECTION: Wait for head to change if it hasn't
@@ -149,23 +148,23 @@ void* thread_runner(void* x) {
             didHeadChange = false;
             pthread_mutex_unlock(&tlock3);
 
+
             // CRITICAL SECTION: Print the head content 
             pthread_mutex_lock(&tlock1);
-
             // Thread 2 could be waiting for the head to change, but then the user hits enter, which causes
             // thread 2 to stop waiting and the linked list to be deallocated.
             // The if statement prevents the program from continuing into this block of code and giving a seg fault
             // when accessing the linked list since the linked list could be deallocated.
             if (!is_reading_complete) {
-                hours = local->tm_hour;        // get hours since midnight (0-23)
+                hours = local->tm_hour;         // get hours since midnight (0-23)
                 minutes = local->tm_min;        // get minutes passed after the hour (0-59)
                 seconds = local->tm_sec;        // get seconds passed after minute (0-59)
 
-                // before midday
+                // Before midday
                 if (hours < 12)
                     printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d am:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours, minutes, seconds, head->input);
 
-                // after midday
+                // After midday
                 else
                     printf("Logindex %d, thread %ld, PID %d, %02d/%02d/%d %02d:%02d:%02d pm:  Head of linked list contains %s", logindex, me, getpid(), day, month, year, hours - 12, minutes, seconds, head->input);
 
@@ -175,12 +174,13 @@ void* thread_runner(void* x) {
         }
     }
 
-    // CRITICAL SECTION: free linked list
+    // CRITICAL SECTION: Free linked list
     pthread_mutex_lock(&tlock3);
     if(head != NULL) {
         FreeNodes(head);
         head = NULL;
 
+        // CRITICAL SECTION: Print that the linkedlist is freed
         pthread_mutex_lock(&tlock1);
         printf("LogIndex %d, Thread %ld, PID %d: freed linked list.\n", logindex, me, getpid());
         ++logindex;
@@ -188,7 +188,7 @@ void* thread_runner(void* x) {
     }
     pthread_mutex_unlock(&tlock3);
 
-    // CRITICAL SECTION: free p
+    // CRITICAL SECTION: Free p
     pthread_mutex_lock(&tlock2);
     if (p != NULL && p->creator == me) {
         printf("LogIndex %d, This is thread %ld and I didn't touch ThreadData\n", logindex, me);
@@ -198,8 +198,9 @@ void* thread_runner(void* x) {
         free(p);
         p = NULL;
 
+        // CRITICAL SECTION: Print that the ThreadData is freed
         pthread_mutex_lock(&tlock1);
-        printf("LogIndex %d, This is thread %ld and I deleted the THREAD_DATA object\n", logindex, me);
+        printf("LogIndex %d, This is thread %ld and I deleted the ThreadData object\n", logindex, me);
         ++logindex;
         pthread_mutex_unlock(&tlock1);
     }
