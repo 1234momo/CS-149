@@ -8,6 +8,23 @@ The focus of this assignment is to read floating numbers from multiple files and
 <br />**fork()** is used to compute the sums and counts in parallel. 
 <br />**pipe()** is used to bring the sums and counts from children processes to the parent process. 
 
+Example content in numbers.txt:
+```
+```
+
+Example content in morenumbers.txt:
+```
+1
+2
+3
+4
+```
+
+Example output:
+```
+No numbers in numbers.txt 
+Average: 2.500000
+```
 
 # Assignment 3 - Children processes
 The focus of this assignment is to execute command line commands from a file using the exec call and rerun the commands that run more than 5 seconds.
@@ -66,7 +83,7 @@ spawning too fast
 
 # Assignment 4 - Memory leaks
 The focus of this assignment is to clear memory leaks from allocated memory. 
-Commands from a file are stored into the rows of an array of type char** and the commands in each row of char** is stored into a linked list node.
+Contents from a file are stored into the rows of an array of type char** and the commands in each row of char** is stored into a linked list node.
 The program is able to take up any number of lines of commands from a file.
 In the end of the program, no memory leaks should occur, all allocated memory should be freed, and the commands in each linked list node should be printed recursively.
 
@@ -77,6 +94,65 @@ In the end of the program, no memory leaks should occur, all allocated memory sh
 <br />**valgrind** is used to check for memory leaks.
 <br />**dup2()** is used to reroute the file handlers to files X.out (i.e. 1.out for the first command, 2.out for the second command, 3.out for the third command, etc.) and X.err (i.e. 1.err for the first command, 2.err for the second command, 3.err for the third command, etc).
 
+Example content in the file:
+```
+executing
+a
+test
+now
+```
+
+Example output:
+```
+File mem_tracer.c, line 83, function allocate_array_mem:global allocated new memory segment at address 0x561bd643b2a0 to size 80
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c310 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c330 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c350 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c370 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c390 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c3b0 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c3d0 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c3f0 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c410 to size 20
+File mem_tracer.c, line 87, function allocate_array_mem:global allocated new memory segment at address 0x561bd643c430 to size 20
+File mem_tracer.c, line 121, function global allocated new memory segment at address 0x561bd643b280 to size 24
+File mem_tracer.c, line 122, function global deallocated the memory segment at address 0x561bd643b280
+File mem_tracer.c, line 152, function global allocated new memory segment at address 0x561bd643b280 to size 24
+Index: 0	Command: executing
+
+File mem_tracer.c, line 152, function global allocated new memory segment at address 0x561bd643d710 to size 24
+Index: 0	Command: executing
+
+Index: 1	Command: a
+
+File mem_tracer.c, line 152, function global allocated new memory segment at address 0x561bd643d730 to size 24
+Index: 0	Command: executing
+
+Index: 1	Command: a
+
+Index: 2	Command: test
+
+File mem_tracer.c, line 152, function global allocated new memory segment at address 0x561bd643d750 to size 24
+Index: 0	Command: executing
+
+Index: 1	Command: a
+
+Index: 2	Command: test
+
+Index: 3	Command: now
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c310
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c330
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c350
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c370
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c390
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c3b0
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c3d0
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c3f0
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c410
+File mem_tracer.c, line 168, function global deallocated the memory segment at address 0x561bd643c430
+File mem_tracer.c, line 169, function global deallocated the memory segment at address 0x561bd643b2a0
+File mem_tracer.c, line 175, function global deallocated the memory segment at address 0x561bd643c680
+```
 
 # Assignment 5 - Concurrency
 The focus of this assignment is to concurrently read and store input from the terminal.
