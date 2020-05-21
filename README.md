@@ -96,6 +96,7 @@ The second thread wakes up and prints the content of the linked list along with 
 <br />**pthread_mutex_unlock** is used to unlock the critical sections.
 <br />**pthread_join()** is used to wait for the threads to finish.
 
+Example execution:
 ```
 create first thread
 create second thread
