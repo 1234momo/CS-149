@@ -97,6 +97,26 @@ The second thread wakes up and prints the content of the linked list along with 
 <br />**pthread_join()** is used to wait for the threads to finish.
 
 ```
+create first thread
+create second thread
+wait for first thread to exit
+This is thread 140478111237888 (p=0x7fc394000b20)
+This is thread 140478102845184 (p=0x7fc394000b20)
+example
+Logindex 0, thread 140478111237888, PID 1409, 21/05/2020 00:41:52 am:  Head of linked list contains example
+Logindex 1, thread 140478102845184, PID 1409, 21/05/2020 00:41:52 am: Head of linked list contains example
+command
+Logindex 2, thread 140478111237888, PID 1409, 21/05/2020 00:41:54 am:  Head of linked list contains command
+Logindex 3, thread 140478102845184, PID 1409, 21/05/2020 00:41:54 am: Head of linked list contains command
+running
+Logindex 4, thread 140478111237888, PID 1409, 21/05/2020 00:41:59 am:  Head of linked list contains running
+Logindex 5, thread 140478102845184, PID 1409, 21/05/2020 00:41:59 am: Head of linked list contains running
 
+Logindex 6, thread 140478111237888, PID 1409, 21/05/2020 00:41:59 am: Freed linked list
+Logindex 7, thread 140478111237888, PID 1409, 21/05/2020 00:41:59 am: Didn't touch ThreadData
+Logindex 8, thread 140478102845184, PID 1409, 21/05/2020 00:41:59 am: I deleted the ThreadData object
+first thread exited
+wait for second thread to exit
+second thread exited
 ```
 
